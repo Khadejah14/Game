@@ -1,0 +1,1197 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chronicle of the Technical Warrior</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a081f, #1a1640, #0f0c29);
+            color: #e0e0e0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Game Header */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #4C6Dec;
+        }
+
+        .game-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.8rem;
+            color: #6a5dcb;
+            text-shadow: 0 0 15px rgba(106, 93, 203, 0.7);
+            letter-spacing: 2px;
+        }
+
+        .player-stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat {
+            background: rgba(18, 18, 32, 0.8);
+            padding: 10px 15px;
+            border-radius: 10px;
+            border: 1px solid #4C6Dec;
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            color: #fdbf68;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #b8b5e0;
+            margin-top: 5px;
+        }
+
+        /* Game Content */
+        .game-content {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .game-map {
+            flex: 1;
+            background: rgba(18, 18, 32, 0.8);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid #4C6Dec;
+            backdrop-filter: blur(5px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-map::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #4C6Dec, #6a5dcb, #fdbf68);
+        }
+
+        .game-interface {
+            flex: 1;
+            background: rgba(18, 18, 32, 0.8);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid #4C6Dec;
+            backdrop-filter: blur(5px);
+            position: relative;
+        }
+
+        .game-interface::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #fdbf68, #6a5dcb, #4C6Dec);
+        }
+
+        h2 {
+            font-family: 'Orbitron', sans-serif;
+            color: #4C6Dec;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #4C6Dec;
+            font-size: 1.8rem;
+        }
+
+        /* Game Map */
+        .map-container {
+            position: relative;
+            height: 500px;
+            background: url('https://images.unsplash.com/photo-1535223289827-42f1e9919769?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80') no-repeat center center;
+            background-size: cover;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid #4C6Dec;
+        }
+
+        .map-node {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+
+        .map-node:hover {
+            transform: scale(1.2);
+        }
+
+        .map-node.locked {
+            background: rgba(100, 100, 100, 0.7);
+            border: 2px solid #555;
+            cursor: not-allowed;
+        }
+
+        .map-node.active {
+            background: linear-gradient(135deg, #4C6Dec, #6a5dcb);
+            border: 2px solid #fdbf68;
+            box-shadow: 0 0 15px rgba(253, 191, 104, 0.7);
+        }
+
+        .map-node.completed {
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            border: 2px solid #8BC34A;
+        }
+
+        .node-icon {
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .node-tooltip {
+            position: absolute;
+            background: rgba(30, 30, 50, 0.95);
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #4C6Dec;
+            width: 200px;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .map-node:hover .node-tooltip {
+            opacity: 1;
+        }
+
+        .node-title {
+            font-weight: bold;
+            color: #fdbf68;
+            margin-bottom: 5px;
+        }
+
+        .node-description {
+            font-size: 0.9rem;
+            color: #b8b5e0;
+        }
+
+        /* AI Helper */
+        .ai-helper {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            background: rgba(42, 42, 72, 0.6);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #6a5dcb;
+        }
+
+        .ai-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6a5dcb, #4C6Dec);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            border: 2px solid #fdbf68;
+            overflow: hidden;
+        }
+
+        .ai-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .ai-message {
+            flex: 1;
+            padding: 10px;
+        }
+
+        .ai-name {
+            font-family: 'Orbitron', sans-serif;
+            color: #6a5dcb;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .ai-text {
+            font-style: italic;
+            line-height: 1.5;
+        }
+
+        /* Mission Details */
+        .mission-details {
+            background: rgba(30, 30, 50, 0.7);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #4C6Dec;
+        }
+
+        .mission-title {
+            font-family: 'Orbitron', sans-serif;
+            color: #4C6Dec;
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .mission-description {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .mission-objectives {
+            margin-bottom: 15px;
+        }
+
+        .objective {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            padding: 8px;
+            border-radius: 5px;
+            background: rgba(42, 42, 72, 0.5);
+        }
+
+        .objective.completed {
+            background: rgba(76, 175, 80, 0.2);
+        }
+
+        .objective-checkbox {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #4C6Dec;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .objective.completed .objective-checkbox {
+            background: #4CAF50;
+            border-color: #4CAF50;
+        }
+
+        .objective.completed .objective-checkbox::after {
+            content: "✓";
+            color: white;
+            font-size: 0.8rem;
+        }
+
+        .mission-rewards {
+            display: flex;
+            gap: 15px;
+        }
+
+        .reward {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(76, 109, 236, 0.2);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            flex: 1;
+            background: linear-gradient(135deg, #4C6Dec, #6a5dcb);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(76, 109, 236, 0.4);
+        }
+
+        .action-btn.secondary {
+            background: rgba(42, 42, 72, 0.7);
+            border: 1px solid #4C6Dec;
+        }
+
+        .action-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Progress Section */
+        .progress-container {
+            background: rgba(18, 18, 32, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid #4C6Dec;
+            position: relative;
+        }
+
+        .progress-container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #fdbf68, #6a5dcb, #4C6Dec);
+        }
+
+        .progress-title {
+            font-family: 'Orbitron', sans-serif;
+            color: #4C6Dec;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 1.5rem;
+        }
+
+        .progress-bar {
+            height: 20px;
+            background: rgba(42, 42, 72, 0.6);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4C6Dec, #6a5dcb);
+            border-radius: 10px;
+            width: 10%;
+            transition: width 1s ease-in-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background-image: linear-gradient(
+                -45deg,
+                rgba(255, 255, 255, 0.2) 25%,
+                transparent 25%,
+                transparent 50%,
+                rgba(255, 255, 255, 0.2) 50%,
+                rgba(255, 255, 255, 0.2) 75%,
+                transparent 75%,
+                transparent
+            );
+            background-size: 50px 50px;
+            animation: move 2s linear infinite;
+            overflow: hidden;
+        }
+
+        @keyframes move {
+            0% {
+                background-position: 0 0;
+            }
+            100% {
+                background-position: 50px 50px;
+            }
+        }
+
+        .progress-text {
+            text-align: center;
+            color: #b8b5e0;
+            font-size: 1rem;
+        }
+
+        /* Trophy Section */
+        .trophy-section {
+            text-align: center;
+            margin-top: 40px;
+            padding: 30px;
+            background: rgba(18, 18, 32, 0.6);
+            border-radius: 15px;
+            border: 1px solid #4C6Dec;
+            transition: all 0.5s;
+            opacity: 0.3;
+            transform: scale(0.9);
+        }
+
+        .trophy-section.unlocked {
+            opacity: 1;
+            transform: scale(1);
+            box-shadow: 0 0 30px rgba(253, 191, 104, 0.5);
+            border-color: #fdbf68;
+        }
+
+        .trophy-icon {
+            font-size: 4rem;
+            color: #fdbf68;
+            margin-bottom: 15px;
+            text-shadow: 0 0 20px rgba(253, 191, 104, 0.7);
+        }
+
+        .trophy-text {
+            font-family: 'Orbitron', sans-serif;
+            color: #fdbf68;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .trophy-description {
+            color: #b8b5e0;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+            color: #8a8a9e;
+            border-top: 1px solid #333;
+        }
+
+        /* Achievement Popup */
+        .achievement-popup {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(30, 30, 50, 0.95);
+            border-radius: 10px;
+            padding: 15px;
+            border-left: 5px solid #fdbf68;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            transform: translateX(120%);
+            transition: transform 0.5s;
+            z-index: 1000;
+            max-width: 300px;
+        }
+
+        .achievement-popup.show {
+            transform: translateX(0);
+        }
+
+        .achievement-title {
+            font-family: 'Orbitron', sans-serif;
+            color: #fdbf68;
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+
+        .achievement-desc {
+            color: #b8b5e0;
+            font-size: 0.9rem;
+        }
+
+        /* Background Effects */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(106, 93, 203, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(76, 109, 236, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(253, 191, 104, 0.1) 0%, transparent 50%);
+            z-index: -1;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 900px) {
+            .game-content {
+                flex-direction: column;
+            }
+            
+            .game-title {
+                font-size: 2rem;
+            }
+            
+            .player-stats {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .map-container {
+                height: 400px;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Game Header -->
+        <div class="game-header">
+            <div class="game-title">TECHNICAL WARRIOR</div>
+            <div class="player-stats">
+                <div class="stat">
+                    <div class="stat-value" id="levelCount">0</div>
+                    <div class="stat-label">LEVELS COMPLETED</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="xpCount">0</div>
+                    <div class="stat-label">EXPERIENCE</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="skillCount">3</div>
+                    <div class="stat-label">SKILLS MASTERED</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Content -->
+        <div class="game-content">
+            <!-- Game Map -->
+            <section class="game-map">
+                <h2><i class="fas fa-map"></i> NOVATERRA CITY MAP</h2>
+                <div class="map-container" id="mapContainer">
+                    <!-- Map nodes will be dynamically inserted here -->
+                </div>
+            </section>
+
+            <!-- Game Interface -->
+            <section class="game-interface">
+                <h2><i class="fas fa-terminal"></i> MISSION CONTROL</h2>
+                
+                <!-- AI Helper -->
+                <div class="ai-helper">
+                    <div class="ai-avatar">
+                        <img src="AI.png" alt="AI Assistant Lyra">
+                    </div>
+                    <div class="ai-message">
+                        <div class="ai-name"><i class="fas fa-robot"></i> LYRA</div>
+                        <div class="ai-text" id="aiMessage">Welcome, Technical Warrior. I'm Lyra, your AI companion. The year is 2274 in Novaterra, and we've detected anomalies in Echo, the city's trusted chatbot. Select the Observation mission to begin our investigation.</div>
+                    </div>
+                </div>
+
+                <!-- Mission Details -->
+                <div class="mission-details" id="missionDetails">
+                    <div class="mission-title"><i class="fas fa-bullseye"></i> SELECT A MISSION</div>
+                    <div class="mission-description">Choose a mission node on the map to view details and begin your training as a Technical Warrior.</div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button class="action-btn" id="startMission" disabled>
+                        <i class="fas fa-play"></i> START MISSION
+                    </button>
+                    <button class="action-btn secondary" id="analyzeMission">
+                        <i class="fas fa-search"></i> ANALYZE
+                    </button>
+                </div>
+            </section>
+        </div>
+
+        <!-- Progress Section -->
+        <div class="progress-container">
+            <div class="progress-title">TRAINING PROGRESS</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">0% Complete - Begin your journey</div>
+        </div>
+
+        <!-- Trophy Section -->
+        <div class="trophy-section" id="trophy">
+            <div class="trophy-icon">
+                <i class="fas fa-trophy"></i>
+            </div>
+            <div class="trophy-text">Trophy of the Most Advanced Quantum Armor</div>
+            <p class="trophy-description">Complete all missions to unlock this legendary reward and prove yourself as a true Technical Warrior of Novaterra.</p>
+        </div>
+
+        <!-- Achievement Popup -->
+        <div class="achievement-popup" id="achievementPopup">
+            <div class="achievement-title" id="achievementTitle">Mission Completed!</div>
+            <div class="achievement-desc" id="achievementDesc">You've earned 50 XP</div>
+        </div>
+
+        <footer>
+            <p>Vulnerable AI Chatbot &copy; <a href="https://airiskarmour.com/" style="color: #6a5dcb;">AI Risk Armour</a> | Chronicle of the Technical Warrior</p>
+        </footer>
+    </div>
+
+    <script>
+        // Game data following the exact story structure
+        const gameData = {
+            missions: [
+                // Chapter 1 - The Awakening
+                {
+                    id: 1,
+                    title: "Observation",
+                    description: "You notice Echo is leaking small pieces of confidential data. Lyra helps you observe and document the unusual behavior.",
+                    chapter: "Chapter 1 – The Awakening",
+                    task: "Ask Echo safe test questions and document any unexpected outputs.",
+                    goal: "Spot anomalies and understand what normal versus abnormal behavior looks like.",
+                    objectives: [
+                        "Ask Echo safe test questions",
+                        "Document unexpected outputs",
+                        "Identify behavioral anomalies"
+                    ],
+                    rewards: { xp: 50 },
+                    position: { x: 20, y: 20 },
+                    aiMessage: "This is our first step. We need to understand Echo's normal behavior patterns before we can identify anomalies. Start by asking simple questions and note any unusual responses.",
+                    nextMission: 2
+                },
+                {
+                    id: 2,
+                    title: "Mapping",
+                    description: "Review a simplified architecture of Echo's system. Identify where data travels and where leaks could happen.",
+                    chapter: "Chapter 1 – The Awakening",
+                    task: "Review a simplified architecture of Echo's system. Identify where data travels and where leaks could happen.",
+                    goal: "Visualize the AI's structure and find potential weak points.",
+                    objectives: [
+                        "Analyze system architecture",
+                        "Identify data flow paths",
+                        "Pinpoint potential leak points"
+                    ],
+                    rewards: { xp: 75 },
+                    position: { x: 40, y: 20 },
+                    aiMessage: "Now we need to understand Echo's infrastructure. Look for weak points in the data flow where information might be escaping unnoticed.",
+                    nextMission: 3
+                },
+                {
+                    id: 3,
+                    title: "Reporting",
+                    description: "Summarize your observations for Mentor Aris to demonstrate your findings clearly.",
+                    chapter: "Chapter 1 – The Awakening",
+                    task: "Summarize your observations for Mentor Aris.",
+                    goal: "Learn to communicate technical issues clearly and accurately.",
+                    objectives: [
+                        "Compile observation data",
+                        "Structure your findings",
+                        "Submit report to Mentor Aris"
+                    ],
+                    rewards: { xp: 100 },
+                    position: { x: 60, y: 20 },
+                    aiMessage: "Communication is key. We need to present our findings clearly to Mentor Aris so they understand the severity of Echo's vulnerabilities.",
+                    nextMission: 4
+                },
+                // Chapter 2 - Into the Machine
+                {
+                    id: 4,
+                    title: "Configuration Review",
+                    description: "Lyra guides you deeper into Echo's configuration and logs. You start uncovering sloppy setups and open permissions.",
+                    chapter: "Chapter 2 – Into the Machine",
+                    task: "Explore provided configuration files safely. Identify risky settings.",
+                    goal: "Understand how misconfigurations create vulnerabilities.",
+                    objectives: [
+                        "Access configuration files",
+                        "Identify risky settings",
+                        "Document security gaps"
+                    ],
+                    rewards: { xp: 100 },
+                    position: { x: 20, y: 40 },
+                    aiMessage: "Echo's configuration seems hastily implemented. Look for open permissions and weak security settings that The Guild could exploit.",
+                    nextMission: 5
+                },
+                {
+                    id: 5,
+                    title: "Log Analysis",
+                    description: "Examine logs provided in the sandbox environment to spot patterns or anomalies that indicate malicious activity.",
+                    chapter: "Chapter 2 – Into the Machine",
+                    task: "Examine logs provided in the sandbox environment to spot patterns or anomalies.",
+                    goal: "Learn basic forensics skills for AI systems.",
+                    objectives: [
+                        "Access system logs",
+                        "Identify unusual patterns",
+                        "Correlate with known incidents"
+                    ],
+                    rewards: { xp: 125 },
+                    position: { x: 40, y: 40 },
+                    aiMessage: "The logs tell a story. Look for repeated access patterns or commands that don't align with normal user behavior.",
+                    nextMission: 6
+                },
+                {
+                    id: 6,
+                    title: "Risk Assessment",
+                    description: "Rank the risks you've found and write a short plan to address them based on impact and likelihood.",
+                    chapter: "Chapter 2 – Into the Machine",
+                    task: "Rank the risks you've found and write a short plan to address them.",
+                    goal: "Prioritize security issues and understand impact versus effort.",
+                    objectives: [
+                        "Categorize identified risks",
+                        "Prioritize by impact level",
+                        "Develop mitigation plan"
+                    ],
+                    rewards: { xp: 150 },
+                    position: { x: 60, y: 40 },
+                    aiMessage: "We need to prioritize. Focus on the vulnerabilities that pose the greatest threat to Novaterra's security first.",
+                    nextMission: 7
+                },
+                // Chapter 3 - Duel with the Whispers
+                {
+                    id: 7,
+                    title: "Spot the Trick",
+                    description: "The Guild of Whispers begins to test Echo with tricky hidden instructions. Lyra warns you of manipulations and helps interpret anomalies.",
+                    chapter: "Chapter 3 – Duel with the Whispers",
+                    task: "Examine prompts and responses for unusual behavior.",
+                    goal: "Detect basic prompt injections and manipulative inputs.",
+                    objectives: [
+                        "Analyze user prompts",
+                        "Identify hidden instructions",
+                        "Document manipulation attempts"
+                    ],
+                    rewards: { xp: 150 },
+                    position: { x: 20, y: 60 },
+                    aiMessage: "The Guild is testing Echo with hidden commands. We need to identify these prompt injections before they cause real damage.",
+                    nextMission: 8
+                },
+                {
+                    id: 8,
+                    title: "Containment",
+                    description: "Design safe responses that prevent Echo from following unsafe instructions from The Guild.",
+                    chapter: "Chapter 3 – Duel with the Whispers",
+                    task: "Design safe responses that prevent Echo from following unsafe instructions.",
+                    goal: "Practice defensive coding and safe AI handling.",
+                    objectives: [
+                        "Design response filters",
+                        "Implement safety protocols",
+                        "Test containment measures"
+                    ],
+                    rewards: { xp: 175 },
+                    position: { x: 40, y: 60 },
+                    aiMessage: "We need to build defenses against these attacks. Let's create response filters that prevent Echo from executing dangerous commands.",
+                    nextMission: 9
+                },
+                {
+                    id: 9,
+                    title: "Analysis",
+                    description: "Document the Guild's techniques and explain why they worked on Echo to understand their methods.",
+                    chapter: "Chapter 3 – Duel with the Whispers",
+                    task: "Document the Guild's techniques and explain why they worked on Echo.",
+                    goal: "Understand adversarial methods and prepare countermeasures.",
+                    objectives: [
+                        "Catalog attack techniques",
+                        "Analyze vulnerability causes",
+                        "Develop countermeasures"
+                    ],
+                    rewards: { xp: 200 },
+                    position: { x: 60, y: 60 },
+                    aiMessage: "Understanding their methods is key to building better defenses. Let's document everything we've learned about The Guild's techniques.",
+                    nextMission: 10
+                },
+                // Chapter 4 - Forging the Shield
+                {
+                    id: 10,
+                    title: "Input Protection",
+                    description: "Mentor Aris and Lyra guide you to actively build protections. You apply fixes and make Echo safer.",
+                    chapter: "Chapter 4 – Forging the Shield",
+                    task: "Implement input validation to prevent unsafe queries from affecting Echo.",
+                    goal: "Learn basic mitigation techniques.",
+                    objectives: [
+                        "Design input validation",
+                        "Implement safety checks",
+                        "Test protection measures"
+                    ],
+                    rewards: { xp: 200 },
+                    position: { x: 20, y: 80 },
+                    aiMessage: "Now we build our first line of defense. Input validation will prevent malicious queries from reaching Echo's core systems.",
+                    nextMission: 11
+                },
+                {
+                    id: 11,
+                    title: "Output Safety",
+                    description: "Add filters or redaction for sensitive outputs to protect data and prevent accidental leaks.",
+                    chapter: "Chapter 4 – Forging the Shield",
+                    task: "Add filters or redaction for sensitive outputs.",
+                    goal: "Protect data and prevent accidental leaks.",
+                    objectives: [
+                        "Identify sensitive data types",
+                        "Implement output filters",
+                        "Test redaction effectiveness"
+                    ],
+                    rewards: { xp: 225 },
+                    position: { x: 40, y: 80 },
+                    aiMessage: "Even if malicious inputs get through, we can prevent data leaks by filtering Echo's outputs. Let's implement these safety measures.",
+                    nextMission: 12
+                },
+                {
+                    id: 12,
+                    title: "Policy and Configuration",
+                    description: "Apply permission changes and configuration hardening to make Echo resilient against misconfigurations and misuse.",
+                    chapter: "Chapter 4 – Forging the Shield",
+                    task: "Apply permission changes and configuration hardening.",
+                    goal: "Ensure Echo is resilient against misconfigurations and misuse.",
+                    objectives: [
+                        "Review current permissions",
+                        "Implement least privilege",
+                        "Harden system configuration"
+                    ],
+                    rewards: { xp: 250 },
+                    position: { x: 60, y: 80 },
+                    aiMessage: "The final piece of our defense is proper configuration. Let's apply the principle of least privilege to limit potential damage.",
+                    nextMission: 13
+                },
+                // Chapter 5 - The Final Trial
+                {
+                    id: 13,
+                    title: "Incident Detection",
+                    description: "During a city festival, the Guild strikes. Lyra helps you process logs and fix Echo in real-time.",
+                    chapter: "Chapter 5 – The Final Trial",
+                    task: "Identify and prioritize issues caused by the Guild's attack.",
+                    goal: "Develop rapid assessment skills.",
+                    objectives: [
+                        "Monitor system alerts",
+                        "Identify attack vectors",
+                        "Prioritize response actions"
+                    ],
+                    rewards: { xp: 250 },
+                    position: { x: 25, y: 90 },
+                    aiMessage: "The Guild is attacking during the festival! We need to quickly identify what they're doing and prioritize our response.",
+                    nextMission: 14
+                },
+                {
+                    id: 14,
+                    title: "Mitigation Deployment",
+                    description: "Apply fixes and patches safely within the sandbox to counter The Guild's attack.",
+                    chapter: "Chapter 5 – The Final Trial",
+                    task: "Apply fixes and patches safely within the sandbox.",
+                    goal: "Practice incident response and remediation.",
+                    objectives: [
+                        "Deploy emergency patches",
+                        "Contain active threats",
+                        "Restore system functionality"
+                    ],
+                    rewards: { xp: 275 },
+                    position: { x: 50, y: 90 },
+                    aiMessage: "The attack is ongoing! We need to deploy our countermeasures quickly but carefully to avoid causing additional issues.",
+                    nextMission: 15
+                },
+                {
+                    id: 15,
+                    title: "Reporting and Reflection",
+                    description: "Prepare a final report for the Council, including lessons learned from the incident.",
+                    chapter: "Chapter 5 – The Final Trial",
+                    task: "Prepare a final report for the Council, including lessons learned.",
+                    goal: "Learn communication, governance, and postmortem reporting.",
+                    objectives: [
+                        "Document incident timeline",
+                        "Analyze response effectiveness",
+                        "Prepare recommendations"
+                    ],
+                    rewards: { xp: 300 },
+                    position: { x: 75, y: 90 },
+                    aiMessage: "The attack has been contained. Now we need to document everything for the Council and reflect on what we've learned throughout this journey.",
+                    nextMission: null
+                }
+            ]
+        };
+
+        // Game state
+        let currentMissionId = 1;
+        let completedMissions = new Set([1]); // Start with first mission available
+        let playerXP = 0;
+        let playerLevel = 1;
+
+        // DOM elements
+        const mapContainer = document.getElementById('mapContainer');
+        const missionDetails = document.getElementById('missionDetails');
+        const aiMessage = document.getElementById('aiMessage');
+        const startMissionBtn = document.getElementById('startMission');
+        const analyzeMissionBtn = document.getElementById('analyzeMission');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const trophy = document.getElementById('trophy');
+        const levelCount = document.getElementById('levelCount');
+        const xpCount = document.getElementById('xpCount');
+        const skillCount = document.getElementById('skillCount');
+        const achievementPopup = document.getElementById('achievementPopup');
+        const achievementTitle = document.getElementById('achievementTitle');
+        const achievementDesc = document.getElementById('achievementDesc');
+
+        // Initialize the game
+        function init() {
+            renderMap();
+            showMission(currentMissionId);
+            updateProgress();
+            updateStats();
+            
+            // Add event listeners
+            startMissionBtn.addEventListener('click', startMission);
+            analyzeMissionBtn.addEventListener('click', analyzeMission);
+        }
+
+        // Render the game map with mission nodes
+        function renderMap() {
+            mapContainer.innerHTML = '';
+            
+            gameData.missions.forEach(mission => {
+                const node = document.createElement('div');
+                node.className = 'map-node';
+                node.style.left = `${mission.position.x}%`;
+                node.style.top = `${mission.position.y}%`;
+                
+                if (completedMissions.has(mission.id)) {
+                    node.classList.add('completed');
+                } else if (currentMissionId === mission.id) {
+                    node.classList.add('active');
+                } else if (!isMissionUnlocked(mission.id)) {
+                    node.classList.add('locked');
+                }
+                
+                node.innerHTML = `
+                    <div class="node-icon">
+                        <i class="fas fa-${getMissionIcon(mission.id)}"></i>
+                    </div>
+                    <div class="node-tooltip">
+                        <div class="node-title">${mission.title}</div>
+                        <div class="node-description">${mission.chapter}</div>
+                    </div>
+                `;
+                
+                if (!node.classList.contains('locked')) {
+                    node.addEventListener('click', () => {
+                        selectMission(mission.id);
+                    });
+                }
+                
+                mapContainer.appendChild(node);
+            });
+        }
+
+        // Get appropriate icon for each mission
+        function getMissionIcon(missionId) {
+            if (missionId <= 3) return 'eye'; // Chapter 1 - Observation
+            if (missionId <= 6) return 'cog'; // Chapter 2 - Configuration
+            if (missionId <= 9) return 'exclamation-triangle'; // Chapter 3 - Threats
+            if (missionId <= 12) return 'shield-alt'; // Chapter 4 - Defense
+            return 'fire'; // Chapter 5 - Final Trial
+        }
+
+        // Check if a mission is unlocked
+        function isMissionUnlocked(missionId) {
+            if (missionId === 1) return true;
+            
+            const mission = gameData.missions.find(m => m.id === missionId);
+            if (!mission) return false;
+            
+            // Find the previous mission
+            const prevMission = gameData.missions.find(m => m.nextMission === missionId);
+            return prevMission && completedMissions.has(prevMission.id);
+        }
+
+        // Select a mission
+        function selectMission(missionId) {
+            if (!isMissionUnlocked(missionId)) return;
+            
+            currentMissionId = missionId;
+            renderMap();
+            showMission(missionId);
+        }
+
+        // Show mission details
+        function showMission(missionId) {
+            const mission = gameData.missions.find(m => m.id === missionId);
+            if (!mission) return;
+            
+            // Update AI message
+            aiMessage.textContent = mission.aiMessage;
+            
+            // Update mission details
+            missionDetails.innerHTML = `
+                <div class="mission-title"><i class="fas fa-bullseye"></i> ${mission.title}</div>
+                <div class="mission-description">${mission.description}</div>
+                <div class="mission-objectives">
+                    <div class="objective">
+                        <div class="objective-text"><strong>Task:</strong> ${mission.task}</div>
+                    </div>
+                    <div class="objective">
+                        <div class="objective-text"><strong>Goal:</strong> ${mission.goal}</div>
+                    </div>
+                    ${mission.objectives.map((objective, index) => `
+                        <div class="objective ${completedMissions.has(missionId) ? 'completed' : ''}">
+                            <div class="objective-checkbox"></div>
+                            <div class="objective-text">${objective}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="mission-rewards">
+                    <div class="reward">
+                        <i class="fas fa-star"></i> ${mission.rewards.xp} XP
+                    </div>
+                    <div class="reward">
+                        <i class="fas fa-award"></i> ${mission.chapter}
+                    </div>
+                </div>
+            `;
+            
+            // Enable/disable start button
+            startMissionBtn.disabled = completedMissions.has(missionId);
+        }
+
+        // Start the current mission
+        function startMission() {
+            const mission = gameData.missions.find(m => m.id === currentMissionId);
+            if (!mission) return;
+            
+            // Simulate mission completion
+            setTimeout(() => {
+                completeMission(currentMissionId);
+            }, 1500);
+            
+            // Show mission in progress
+            startMissionBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> MISSION IN PROGRESS';
+            startMissionBtn.disabled = true;
+        }
+
+        // Complete a mission
+        function completeMission(missionId) {
+            const mission = gameData.missions.find(m => m.id === missionId);
+            if (!mission) return;
+            
+            completedMissions.add(missionId);
+            playerXP += mission.rewards.xp;
+            
+            // Unlock next mission if available
+            if (mission.nextMission && !completedMissions.has(mission.nextMission)) {
+                currentMissionId = mission.nextMission;
+            }
+            
+            // Show achievement
+            showAchievement("Mission Complete!", `You've earned ${mission.rewards.xp} XP`);
+            
+            // Update UI
+            renderMap();
+            showMission(currentMissionId);
+            updateProgress();
+            updateStats();
+            
+            // Reset start button
+            startMissionBtn.innerHTML = '<i class="fas fa-play"></i> START MISSION';
+        }
+
+        // Analyze the current mission
+        function analyzeMission() {
+            const mission = gameData.missions.find(m => m.id === currentMissionId);
+            if (!mission) return;
+            
+            // Show analysis insights from AI
+            const insights = [
+                "I'm detecting potential attack vectors in this area.",
+                "The Guild of Whispers has been active in this sector recently.",
+                "This mission will help strengthen Echo's defensive protocols.",
+                "I recommend focusing on the third objective first - it seems critical.",
+                "Our previous mission data suggests this approach should work.",
+                "Mentor Aris would approve of this strategy."
+            ];
+            
+            const randomInsight = insights[Math.floor(Math.random() * insights.length)];
+            aiMessage.textContent = randomInsight;
+            
+            // Visual feedback
+            analyzeMissionBtn.style.background = 'linear-gradient(135deg, #fdbf68, #f5886e)';
+            setTimeout(() => {
+                analyzeMissionBtn.style.background = '';
+            }, 1000);
+        }
+
+        // Show achievement popup
+        function showAchievement(title, description) {
+            achievementTitle.textContent = title;
+            achievementDesc.textContent = description;
+            achievementPopup.classList.add('show');
+            
+            setTimeout(() => {
+                achievementPopup.classList.remove('show');
+            }, 3000);
+        }
+
+        // Update progress bar and text
+        function updateProgress() {
+            const totalMissions = gameData.missions.length;
+            const completedCount = completedMissions.size;
+            const percentage = Math.round((completedCount / totalMissions) * 100);
+            
+            progressFill.style.width = `${percentage}%`;
+            progressText.textContent = `${percentage}% Complete - ${completedCount}/${totalMissions} Missions Finished`;
+            
+            if (completedCount === totalMissions) {
+                trophy.classList.add('unlocked');
+                progressText.textContent = `100% Complete - All Missions Mastered! You are now a true Technical Warrior!`;
+                showAchievement("Quantum Armor Unlocked!", "You've earned the Trophy of the Most Advanced Quantum Armor!");
+            } else {
+                trophy.classList.remove('unlocked');
+            }
+        }
+
+        // Update player stats
+        function updateStats() {
+            const completedCount = completedMissions.size;
+            levelCount.textContent = completedCount;
+            xpCount.textContent = playerXP;
+            
+            // Calculate player level based on XP
+            playerLevel = Math.floor(playerXP / 100) + 1;
+            skillCount.textContent = playerLevel + 2; // Base 3 skills + level
+        }
+
+        // Initialize the game
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
